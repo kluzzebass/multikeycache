@@ -91,8 +91,28 @@ func TestMultiKeyCache(t *testing.T) {
 	err = c.Set("pk5", "value", "a5", "b5", "c5")
 	assert.Nil(t, err)
 
+	// insert a new item
+	err = c.Set("pk6", "value", "a6", "b6", "c6")
+	assert.Nil(t, err)
+
 	// check the length of the cache
-	assert.Equal(t, 1, c.Len())
+	assert.Equal(t, 2, c.Len())
+
+	// check the secondary key names
+	assert.Equal(t, []string{"a", "b", "c"}, c.SecondaryKeyNames())
+
+	// check the secondary keys
+	assert.Equal(t, []string{"a5", "a6"}, c.SecondaryKeys("a"))
+	assert.Equal(t, []string{"b5", "b6"}, c.SecondaryKeys("b"))
+	assert.Equal(t, []string{"c5", "c6"}, c.SecondaryKeys("c"))
+
+	// check the secondary key name to keys map
+	assert.Equal(t, map[string]string{"a5": "pk5", "a6": "pk6"}, c.SecondaryKeyNameToKeys("a"))
+	assert.Equal(t, map[string]string{"b5": "pk5", "b6": "pk6"}, c.SecondaryKeyNameToKeys("b"))
+	assert.Equal(t, map[string]string{"c5": "pk5", "c6": "pk6"}, c.SecondaryKeyNameToKeys("c"))
+
+	// check the get all
+	assert.Equal(t, map[string]string{"pk5": "value", "pk6": "value"}, c.GetAll())
 
 	// clear the cache
 	c.Clear()

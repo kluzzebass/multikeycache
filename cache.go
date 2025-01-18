@@ -253,3 +253,57 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Len() int {
 
 	return len(c.values)
 }
+
+// Keys returns a slice of all the primary keys in the cache
+func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Keys() []PKT {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	keys := make([]PKT, 0, len(c.values))
+	for pk := range c.values {
+		keys = append(keys, pk)
+	}
+	return keys
+}
+
+// SecondaryKeyNames returns a slice of all the secondary key names in the cache
+func (c *multiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeyNames() []SKNT {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.secondaryKeyNames
+}
+
+// SecondaryKeys returns a slice of all the secondary keys in the cache
+// for the given secondary key name
+func (c *multiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeys(skn SKNT) []SKT {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	keys := make([]SKT, 0, len(c.indexes[skn]))
+	for sk := range c.indexes[skn] {
+		keys = append(keys, sk)
+	}
+	return keys
+}
+
+// SecondaryKeyNameToKeys returns a map of all the secondary keys to primary keys in the cache
+// for the given secondary key name
+func (c *multiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeyNameToKeys(skn SKNT) map[SKT]PKT {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.indexes[skn]
+}
+
+// GetAll returns a map of all the items in the cache
+func (c *multiKeyCache[PKT, VT, SKNT, SKT]) GetAll() map[PKT]VT {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	values := make(map[PKT]VT)
+	for pk, item := range c.values {
+		values[pk] = item.value
+	}
+	return values
+}
