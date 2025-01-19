@@ -8,8 +8,9 @@ This implementation provides thread-safe operations and ensures that secondary k
 ### Example Usage
 
 ```go
+
 // Create a new cache with secondary key names "email" and "username"
-cache, err := NewMultiKeyCache[int, User, string, string]([]string{"email", "username"})
+cache, err := multikeycache.NewMultiKeyCache[int, User, string, string]([]string{"email", "username"})
 if err != nil {
     log.Fatal(err)
 }
