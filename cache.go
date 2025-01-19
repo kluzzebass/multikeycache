@@ -1,3 +1,4 @@
+// Package multikeycache provides a multi-key cache.
 package multikeycache
 
 import (
@@ -11,47 +12,59 @@ import (
 // - SKNT: (SecondaryKeyNameType) The type of the secondary key name
 // - SKT: (SecondaryKeyType) The type of the secondary key
 
-type ErrorSecondaryKeyNumberMismatch struct {
+// ErrSecondaryKeyNumberMismatch is an error that occurs when the number
+// of secondary keys does not match the number of secondary key names during a Set operation
+type ErrSecondaryKeyNumberMismatch struct {
 	Expected int
 	Actual   int
 }
 
-func (e ErrorSecondaryKeyNumberMismatch) Error() string {
+// Error returns a string describing the error
+func (e ErrSecondaryKeyNumberMismatch) Error() string {
 	return fmt.Sprintf("number of secondary keys does not match number of secondary key names: expected %d, actual %d", e.Expected, e.Actual)
 }
 
-type ErrorWrongSecondaryKey[PKT comparable, SKNT comparable] struct {
+// ErrWrongSecondaryKey is an error that occurs when a secondary key already
+// exists for a different primary key
+type ErrWrongSecondaryKey[PKT comparable, SKNT comparable] struct {
 	ExistingPK   PKT
 	NewPK        PKT
 	SecondaryKey SKNT
 }
 
-func (e ErrorWrongSecondaryKey[PKT, SKNT]) Error() string {
+// Error returns a string describing the error
+func (e ErrWrongSecondaryKey[PKT, SKNT]) Error() string {
 	return fmt.Sprintf("secondary key %v already exists for a different pk %v", e.SecondaryKey, e.ExistingPK)
 }
 
-type ErrorUnknownSecondaryKey[SKNT comparable] struct {
+// ErrUnknownSecondaryKey is an error that occurs when a secondary key name does not exist
+type ErrUnknownSecondaryKey[SKNT comparable] struct {
 	SecondaryKeyName SKNT
 }
 
-func (e ErrorUnknownSecondaryKey[SKNT]) Error() string {
+// Error returns a string describing the error
+func (e ErrUnknownSecondaryKey[SKNT]) Error() string {
 	return fmt.Sprintf("secondary key not found for secondary key name %v", e.SecondaryKeyName)
 }
 
-type ErrorSecondaryKeyNameNotUnique[SKNT comparable] struct {
+// ErrSecondaryKeyNameNotUnique is an error that occurs when a secondary key name is not unique
+type ErrSecondaryKeyNameNotUnique[SKNT comparable] struct {
 	SecondaryKeyName SKNT
 }
 
-func (e ErrorSecondaryKeyNameNotUnique[SKNT]) Error() string {
+// Error returns a string describing the error
+func (e ErrSecondaryKeyNameNotUnique[SKNT]) Error() string {
 	return fmt.Sprintf("secondary key name %v is not unique", e.SecondaryKeyName)
 }
 
+// item is the type of the item stored in the cache
 type item[PKT comparable, VT any, SecondaryKeyNameType comparable, SKT comparable] struct {
 	pk            PKT
 	value         VT
 	secondaryKeys map[SecondaryKeyNameType]SKT
 }
 
+// multiKeyCache is the type of the multi-key cache
 type multiKeyCache[PKT comparable, VT any, SKNT comparable, SKT comparable] struct {
 	mu                sync.RWMutex
 	values            map[PKT]item[PKT, VT, SKNT, SKT]
@@ -72,7 +85,7 @@ func NewMultiKeyCache[PKT comparable, VT any, SKNT comparable, SKT comparable](s
 	seen := make(map[SKNT]bool)
 	for _, name := range secondaryKeyNames {
 		if seen[name] {
-			return nil, ErrorSecondaryKeyNameNotUnique[SKNT]{SecondaryKeyName: name}
+			return nil, ErrSecondaryKeyNameNotUnique[SKNT]{SecondaryKeyName: name}
 		}
 		seen[name] = true
 	}
@@ -94,14 +107,14 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Set(pk PKT, v VT, sKeys ...SKT) erro
 
 	// check if the number of secondary keys matches the number of secondary key names
 	if len(sKeys) != len(c.secondaryKeyNames) {
-		return ErrorSecondaryKeyNumberMismatch{Expected: len(c.secondaryKeyNames), Actual: len(sKeys)}
+		return ErrSecondaryKeyNumberMismatch{Expected: len(c.secondaryKeyNames), Actual: len(sKeys)}
 	}
 
 	// check if the secondary keys already exist for a different pk
 	for i, k := range c.secondaryKeyNames {
 		if spk, ok := c.indexes[k][sKeys[i]]; ok {
 			if spk != pk {
-				return ErrorWrongSecondaryKey[PKT, SKNT]{SecondaryKey: k, ExistingPK: spk, NewPK: pk}
+				return ErrWrongSecondaryKey[PKT, SKNT]{SecondaryKey: k, ExistingPK: spk, NewPK: pk}
 			}
 		}
 	}
@@ -156,7 +169,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) GetBySecondaryKey(skn SKNT, sk SKT) 
 
 	// check if the secondary key name exists
 	if !c.secondaryKeyNameExists(skn) {
-		return zero, false, ErrorUnknownSecondaryKey[SKNT]{SecondaryKeyName: skn}
+		return zero, false, ErrUnknownSecondaryKey[SKNT]{SecondaryKeyName: skn}
 	}
 
 	// check if the secondary key exists
@@ -199,7 +212,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) DeleteBySecondaryKey(skn SKNT, sk SK
 
 	// check if the secondary key name exists
 	if !c.secondaryKeyNameExists(skn) {
-		return ErrorUnknownSecondaryKey[SKNT]{SecondaryKeyName: skn}
+		return ErrUnknownSecondaryKey[SKNT]{SecondaryKeyName: skn}
 	}
 
 	// find the item

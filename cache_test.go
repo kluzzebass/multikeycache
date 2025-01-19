@@ -10,7 +10,7 @@ func TestMultiKeyCache(t *testing.T) {
 	// create a new cache with duplicate secondary key names
 	c, err := NewMultiKeyCache[string, string, string, string]([]string{"a", "a", "c"})
 	assert.Nil(t, c)
-	assert.ErrorAs(t, err, &ErrorSecondaryKeyNameNotUnique[string]{SecondaryKeyName: "a"})
+	assert.ErrorAs(t, err, &ErrSecondaryKeyNameNotUnique[string]{SecondaryKeyName: "a"})
 
 	// create a new cache with unique secondary key names
 	c, err = NewMultiKeyCache[string, string, string, string]([]string{"a", "b", "c"})
@@ -26,11 +26,11 @@ func TestMultiKeyCache(t *testing.T) {
 
 	// set the second item with a different number of secondary keys
 	err = c.Set("pk2", "value", "a2", "b2")
-	assert.ErrorAs(t, err, &ErrorSecondaryKeyNumberMismatch{})
+	assert.ErrorAs(t, err, &ErrSecondaryKeyNumberMismatch{})
 
 	// set the third item, but the secondary keys already exists for a different primary key
 	err = c.Set("pk3", "value", "a1", "b1", "c1")
-	assert.ErrorAs(t, err, &ErrorWrongSecondaryKey[string, string]{SecondaryKey: "a", ExistingPK: "pk1", NewPK: "pk3"})
+	assert.ErrorAs(t, err, &ErrWrongSecondaryKey[string, string]{SecondaryKey: "a", ExistingPK: "pk1", NewPK: "pk3"})
 
 	// get the item by primary key
 	value, ok := c.Get("pk1")
@@ -51,7 +51,7 @@ func TestMultiKeyCache(t *testing.T) {
 	// get the item by secondary key name that does not exist
 	value, ok, err = c.GetBySecondaryKey("d", "d1")
 	assert.False(t, ok)
-	assert.ErrorAs(t, err, &ErrorUnknownSecondaryKey[string]{SecondaryKeyName: "d"})
+	assert.ErrorAs(t, err, &ErrUnknownSecondaryKey[string]{SecondaryKeyName: "d"})
 	assert.Equal(t, "", value)
 
 	// get the item by a secondary key, but the item does not exist
