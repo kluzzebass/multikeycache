@@ -64,8 +64,8 @@ type item[PKT comparable, VT any, SecondaryKeyNameType comparable, SKT comparabl
 	secondaryKeys map[SecondaryKeyNameType]SKT
 }
 
-// multiKeyCache is the type of the multi-key cache
-type multiKeyCache[PKT comparable, VT any, SKNT comparable, SKT comparable] struct {
+// MultiKeyCache is the type of the multi-key cache
+type MultiKeyCache[PKT comparable, VT any, SKNT comparable, SKT comparable] struct {
 	mu                sync.RWMutex
 	values            map[PKT]item[PKT, VT, SKNT, SKT]
 	indexes           map[SKNT]map[SKT]PKT
@@ -74,8 +74,8 @@ type multiKeyCache[PKT comparable, VT any, SKNT comparable, SKT comparable] stru
 
 // NewMultiKeyCache creates a new multi-key cache
 // and returns an error if the secondary key names are not unique
-func NewMultiKeyCache[PKT comparable, VT any, SKNT comparable, SKT comparable](secondaryKeyNames []SKNT) (*multiKeyCache[PKT, VT, SKNT, SKT], error) {
-	c := &multiKeyCache[PKT, VT, SKNT, SKT]{
+func NewMultiKeyCache[PKT comparable, VT any, SKNT comparable, SKT comparable](secondaryKeyNames []SKNT) (*MultiKeyCache[PKT, VT, SKNT, SKT], error) {
+	c := &MultiKeyCache[PKT, VT, SKNT, SKT]{
 		values:            make(map[PKT]item[PKT, VT, SKNT, SKT]),
 		indexes:           make(map[SKNT]map[SKT]PKT),
 		secondaryKeyNames: make([]SKNT, len(secondaryKeyNames)),
@@ -101,7 +101,7 @@ func NewMultiKeyCache[PKT comparable, VT any, SKNT comparable, SKT comparable](s
 // Set sets the value of the item with the given primary key
 // and the given secondary keys (in the same order as the secondary key names)
 // and returns an error if the secondary keys do not match the secondary key names
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Set(pk PKT, v VT, sKeys ...SKT) error {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) Set(pk PKT, v VT, sKeys ...SKT) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -144,7 +144,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Set(pk PKT, v VT, sKeys ...SKT) erro
 
 // Get returns the value of the item with the given primary key
 // and a boolean indicating if the item was found
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Get(pk PKT) (VT, bool) {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) Get(pk PKT) (VT, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -161,7 +161,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Get(pk PKT) (VT, bool) {
 // GetBySecondaryKey returns the value of the item with the given secondary key
 // and a boolean indicating if the item was found
 // and an error if the secondary key name does not exist
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) GetBySecondaryKey(skn SKNT, sk SKT) (VT, bool, error) {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) GetBySecondaryKey(skn SKNT, sk SKT) (VT, bool, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -185,7 +185,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) GetBySecondaryKey(skn SKNT, sk SKT) 
 }
 
 // Delete deletes the item with the given primary key
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Delete(pk PKT) {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) Delete(pk PKT) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -206,7 +206,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Delete(pk PKT) {
 
 // DeleteBySecondaryKey deletes the item with the given secondary key
 // and returns an error if the secondary key name does not exist
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) DeleteBySecondaryKey(skn SKNT, sk SKT) error {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) DeleteBySecondaryKey(skn SKNT, sk SKT) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -240,7 +240,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) DeleteBySecondaryKey(skn SKNT, sk SK
 
 // secondaryKeyNameExists returns true if the secondary key name exists
 // and false otherwise
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) secondaryKeyNameExists(skn SKNT) bool {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) secondaryKeyNameExists(skn SKNT) bool {
 	for _, n := range c.secondaryKeyNames {
 		if n == skn {
 			return true
@@ -251,7 +251,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) secondaryKeyNameExists(skn SKNT) boo
 }
 
 // Clear clears the entire cache. All of it. Gone.
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Clear() {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) Clear() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -260,7 +260,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Clear() {
 }
 
 // Len returns the number of items in the cache
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Len() int {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) Len() int {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -268,7 +268,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Len() int {
 }
 
 // Keys returns a slice of all the primary keys in the cache
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Keys() []PKT {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) Keys() []PKT {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -280,7 +280,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) Keys() []PKT {
 }
 
 // SecondaryKeyNames returns a slice of all the secondary key names in the cache
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeyNames() []SKNT {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeyNames() []SKNT {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -289,7 +289,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeyNames() []SKNT {
 
 // SecondaryKeys returns a slice of all the secondary keys in the cache
 // for the given secondary key name
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeys(skn SKNT) []SKT {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeys(skn SKNT) []SKT {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -302,7 +302,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeys(skn SKNT) []SKT {
 
 // SecondaryKeyNameToKeys returns a map of all the secondary keys to primary keys in the cache
 // for the given secondary key name
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeyNameToKeys(skn SKNT) map[SKT]PKT {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeyNameToKeys(skn SKNT) map[SKT]PKT {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -310,7 +310,7 @@ func (c *multiKeyCache[PKT, VT, SKNT, SKT]) SecondaryKeyNameToKeys(skn SKNT) map
 }
 
 // GetAll returns a map of all the items in the cache
-func (c *multiKeyCache[PKT, VT, SKNT, SKT]) GetAll() map[PKT]VT {
+func (c *MultiKeyCache[PKT, VT, SKNT, SKT]) GetAll() map[PKT]VT {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
